@@ -1,0 +1,90 @@
+# -*- mode: ruby -*-
+# vi: set ft=ruby :
+
+require 'yaml'
+
+# open config yaml
+filename = "kubernetes-docker.yaml"
+filename = ENV["CONFIG"] if ENV.has_key?("CONFIG")
+
+puts "Config Filename: #{filename}"
+spec = YAML.load_file(filename)["spec"]
+
+# setup path
+$setup_path = File.expand_path(spec["setup"]["host_path"])
+
+# vagrant configure
+Vagrant.configure("2") do |config|
+  config.vagrant.plugins = ["vagrant-disksize"]
+
+  config.vm.define spec["name"] do |cfg|
+    cfg.vm.box = spec["box"]["name"]
+    cfg.vm.box_url = spec["box"]["url"] if spec["box"].has_key?("url")
+    cfg.vm.box_version = spec["box"]["version"] if spec["box"].has_key?("version")
+
+    cfg.vm.provider :virtualbox do |vb|
+      vb.customize ["modifyvm", :id, "--nicpromisc2", "allow-all"]
+
+      # additional vm information
+      if spec.has_key?("vminfo")
+        vb.customize ["modifyvm", :id, "--vram", spec['vminfo']['vram']]
+        vb.customize ["modifyvm", :id, "--monitorcount", spec['vminfo']['monitorcount']]
+      end
+
+      vb.name = spec["provider"]["name"]
+      vb.gui = false
+      vb.cpus = spec["provider"]["cpus"]
+      vb.memory = spec["provider"]["memory"]
+      vb.linked_clone = true
+    end
+
+    cfg.vm.hostname = spec["hostname"]
+
+    # ssh
+    if spec.has_key?("ssh")
+      cfg.ssh.username = spec["ssh"]["username"]
+      cfg.ssh.password = spec["ssh"]["password"]
+      cfg.ssh.keys_only = false
+      cfg.ssh.insert_key = false
+    end
+
+    cfg.disksize.size = spec["disk_size"]
+    cfg.vbguest.auto_update = false
+
+    # setup & skel
+    puts "setup & skel"
+    cfg.vm.provision "file", source: "#{$setup_path}", destination: "/tmp/setup"
+
+    cfg.vm.provision "shell", privileged: true, inline: <<-SHELL
+      rsync -av /tmp/setup/ #{spec['setup']['guest_path']}/
+      chmod -R +x #{spec['setup']['guest_path']}
+      cp #{spec['setup']['guest_path']}/bin/* /usr/local/bin/
+      rm -rf /tmp/setup
+    SHELL
+
+    # provision
+    puts "provision"
+    spec['provision'].each do |item|
+      item["args"] = [] if item.has_key?("args") == false
+      item["reboot"] = false if item.has_key?("reboot") == false
+
+      # path
+      if item.has_key?("path")
+        cfg.vm.provision "shell", privileged: true, reboot: item["reboot"],
+          path: "#{$setup_path}/#{item['path']}", args: item["args"]
+        next
+      end
+
+      # inline
+      if item["privileged"] == true
+        cfg.vm.provision "shell", privileged: true, reboot: item["reboot"], inline: item["inline"]
+        next
+      end
+
+      cfg.vm.provision "shell", privileged: true, reboot: item["reboot"], inline: <<-SHELL
+        sudo -H -u #{item["username"]} bash -c #{item["inline"]}
+      SHELL
+    end
+
+  end
+end

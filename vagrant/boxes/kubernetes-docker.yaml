@@ -1,0 +1,54 @@
+---
+spec:
+  name: kubernetes-docker
+  box:
+    name: ubuntu/focal64
+    version: 20220308.0.0
+    url: https://app.vagrantup.com/ubuntu/boxes/focal64
+  setup:
+    host_path: ../setup
+    guest_path: /usr/local/bin/setup
+  provider:
+    name: kubernetes-docker
+    cpus: 4
+    memory: 4096
+  hostname: docker
+  disk_size: 45GB
+  provision:
+    - privileged: true
+      inline: "cat /usr/local/bin/setup/config/skel/profile >> /etc/profile"
+    - privileged: true
+      path: "core/user-passwd.sh"
+      args: ["ubuntu", "ubuntu"]
+    - privileged: true
+      path: "ssh/ssh-keygen.sh"
+      args: ["/usr/local/bin/setup/config/.ssh"]
+    - privileged: true
+      path: "ssh/sshd-config.sh"
+    - privileged: true
+      path: "core/apt-mirror.sh"
+    - privileged: true
+      path: "core/focal-core.sh"
+    - privileged: true
+      reboot: true
+      path: "core/upgrade-kernel.sh"
+    - privileged: true
+      path: "docker/docker-core.sh"
+      args: ["5:20.10.12~3-0~ubuntu-focal"]
+    - privileged: true
+      path: "docker/docker-config.sh"
+      args: ["10.10.0.1/16", "10.11.0.1/16"]
+    - privileged: true
+      path: "certs/root-certs.sh"
+      args: ["mlops", "/usr/local/bin/setup/config/certs"]
+    - privileged: false
+      username: ubuntu
+      inline: "/usr/local/bin/setup/ssh/ssh-keygen.sh"
+      args: ["/usr/local/bin/setup/config/.ssh"]
+    - privileged: false
+      username: ubuntu
+      inline: "/usr/local/bin/setup/core/oh-my-zsh.sh"
+    - privileged: true
+      path: "core/clear-cache.sh"
+    - privileged: true
+      path: "core/compact-disk.sh"

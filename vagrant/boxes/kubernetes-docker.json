@@ -1,0 +1,15 @@
+{
+  "name": "kubernetes/docker",
+  "description": "Kubernetes Docker",
+  "versions": [
+    {
+      "version": "20220311.0.0",
+      "providers": [
+        {
+          "name": "virtualbox",
+          "url": "file://C:/Temp/MLOps/boxes/kubernetes-docker.box"
+        }
+      ]
+    }
+  ]
+}

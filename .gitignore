@@ -1,4 +1,4 @@
 .idea
 .vagrant
 *.box
-/vagrant/workspace
+/intermediate-assignment/workspace

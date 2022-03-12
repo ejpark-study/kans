@@ -1,0 +1,205 @@
+---
+# box info
+docker_box_name: &docker_box_name kubernetes/docker
+docker_box_url: &docker_box_url file://C:/Temp/MLOps/boxes/kubernetes-docker.json
+docker_box_version: &docker_box_version 20220311.0.0
+
+# external ports
+gitlab_forwarded_port: &gitlab_forwarded_port 60001
+
+# code C:\Windows\System32\drivers\etc\hosts
+
+# spec
+spec:
+  setup:
+    host_path: setup
+    guest_path: /usr/local/bin/setup
+  vbox:
+    synced_folder:
+      - disabled: false
+        host_path: ~/workspace
+        guest_path: /share
+      - disabled: false
+        host_path: .
+        guest_path: /vagrant
+  ssh:
+    username: ubuntu
+    password: ubuntu
+  node_list:
+    # devops: gitlab
+    - name: gitlab
+      group_name: /devops
+      enable: true
+      hostname: gitlab.mlops
+      box:
+        name: *docker_box_name
+        url: *docker_box_url
+        version: *docker_box_version
+      private_network: 192.168.56.10
+      forwarded_port:
+        - host: *gitlab_forwarded_port
+          guest: 443
+      resources:
+        cpus: 8
+        memory: 8192
+      vbguest_update: false
+      disk:
+        - name: gitlab-docker
+          storagectl: SCSI
+          port: 2
+          size: 50
+          filename: ./disks/gitlab-docker.vdi
+          device: /dev/sdc
+          mount: /var/lib/docker
+        - name: gitlab-data
+          storagectl: SCSI
+          port: 3
+          size: 50
+          filename: ./disks/gitlab-data.vdi
+          device: /dev/sdd
+          mount: /data
+      provision:
+        - privileged: true
+          inline: "systemctl restart docker"
+        - privileged: true
+          inline: "start-gitlab.sh gitlab.mlops /data/gitlab ChangeMe! gitlab/gitlab-ce:14.7.3-ce.0 /vagrant/docker /usr/local/bin/setup/config/certs GmTMZbtrsYY8Tmb-6QJk"
+        - privileged: true
+          inline: "start-gitlab-runner.sh gitlab/gitlab-runner:latest /data/gitlab-runner /data/gitlab/config/ssl /vagrant/docker"
+        - privileged: true
+          inline: "gitlab-runner-register.sh gitlab.mlops GmTMZbtrsYY8Tmb-6QJk"
+    # devops: harbor
+    - name: harbor
+      group_name: /devops
+      enable: true
+      hostname: harbor.mlops
+      box:
+        name: *docker_box_name
+        url: *docker_box_url
+        version: *docker_box_version
+      private_network: 192.168.56.11
+      resources:
+        cpus: 4
+        memory: 4096
+      vbguest_update: false
+      disk:
+        - name: harbor-docker
+          storagectl: SCSI
+          port: 2
+          size: 50
+          filename: ./disks/harbor-docker.vdi
+          device: /dev/sdc
+          mount: /var/lib/docker
+        - name: harbor-data
+          storagectl: SCSI
+          port: 3
+          size: 50
+          filename: ./disks/harbor-data.vdi
+          device: /dev/sdd
+          mount: /data
+      provision:
+        - privileged: true
+          inline: "systemctl restart docker"
+        - privileged: true
+          inline: "start-harbor.sh harbor.mlops /data/harbor/certs /usr/local/bin/setup/harbor /usr/local/bin/setup/config/skel"
+    # devops: gocd
+    - name: gocd
+      group_name: /devops
+      enable: true
+      hostname: gocd.mlops
+      box:
+        name: *docker_box_name
+        url: *docker_box_url
+        version: *docker_box_version
+      private_network: 192.168.56.12
+      resources:
+        cpus: 4
+        memory: 4096
+      vbguest_update: false
+      disk:
+        - name: gocd-docker
+          storagectl: SCSI
+          port: 2
+          size: 50
+          filename: ./disks/gocd-docker.vdi
+          device: /dev/sdc
+          mount: /var/lib/docker
+        - name: gocd-data
+          storagectl: SCSI
+          port: 3
+          size: 50
+          filename: ./disks/gocd-data.vdi
+          device: /dev/sdd
+          mount: /data
+      provision:
+        - privileged: true
+          inline: "systemctl restart docker"
+        - privileged: true
+          inline: "start-gocd.sh gocd.mlops /data/gocd gocd/gocd-server:v21.4.0 harbor.mlops/library/gocd-agent:v21.4.0 /usr/local/bin/setup/config/certs"
+    # devops: minio
+    - name: minio
+      group_name: /devops
+      enable: false
+      hostname: minio.mlops
+      box:
+        name: *docker_box_name
+        url: *docker_box_url
+        version: *docker_box_version
+      private_network: 192.168.56.13
+      resources:
+        cpus: 4
+        memory: 4096
+      vbguest_update: false
+      disk:
+        - name: minio-docker
+          storagectl: SCSI
+          port: 2
+          size: 50
+          filename: ./disks/minio-docker.vdi
+          device: /dev/sdc
+          mount: /var/lib/docker
+        - name: minio-data
+          storagectl: SCSI
+          port: 3
+          size: 50
+          filename: ./disks/minio-data.vdi
+          device: /dev/sdd
+          mount: /data
+      provision:
+        - privileged: true
+          inline: "systemctl restart docker"
+        - privileged: true
+          inline: "start-minio.sh admin ChangeMe! /data/minio minio/minio:latest"
+    # devops: postgres
+    - name: postgres
+      group_name: /devops
+      enable: false
+      hostname: postgres.mlops
+      box:
+        name: *docker_box_name
+        url: *docker_box_url
+        version: *docker_box_version
+      private_network: 192.168.56.14
+      resources:
+        cpus: 4
+        memory: 4096
+      vbguest_update: false
+      disk:
+        - name: postgres-docker
+          storagectl: SCSI
+          port: 2
+          size: 50
+          filename: ./disks/postgres-docker.vdi
+          device: /dev/sdc
+          mount: /var/lib/docker
+        - name: minio-data
+          storagectl: SCSI
+          port: 3
+          size: 50
+          filename: ./disks/postgres-data.vdi
+          device: /dev/sdd
+          mount: /data
+      provision:
+        - privileged: true
+          inline: "systemctl restart docker"
+        - privileged: true
+          inline: "start-postgres.sh ChangeMe! /data/postgres postgres:14-bullseye /vagrant/docker"

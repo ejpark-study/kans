@@ -1,0 +1,27 @@
+---
+spec:
+  name: kubernetes-master
+  box:
+    name: kubernetes/worker
+    url: file://C:\Temp\MLOps\boxes\kubernetes-worker.json
+  setup:
+    host_path: ../setup
+    guest_path: /usr/local/bin/setup
+  provider:
+    name: kubernetes-master
+    cpus: 4
+    memory: 4096
+  hostname: master
+  disk_size: 45GB
+  provision:
+    - privileged: true
+      path: "core/dev-env.sh"
+    - privileged: true
+      path: "kubernetes/kubernetes-utils.sh"
+    - privileged: false
+      username: ubuntu
+      inline: "/usr/local/bin/setup/kubernetes/kubernetes-utils-user.sh"
+    - privileged: true
+      path: "core/clear-cache.sh"
+    - privileged: true
+      path: "core/compact-disk.sh"

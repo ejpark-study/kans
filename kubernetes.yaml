@@ -1,0 +1,144 @@
+---
+# box info
+master_box_name: &master_box_name kubernetes/master
+master_box_url: &master_box_url file://C:/Temp/MLOps/boxes/kubernetes-master.json
+master_box_version: &master_box_version 20220311.0.0
+
+worker_box_name: &worker_box_name kubernetes/worker
+worker_box_url: &worker_box_url file://C:/Temp/MLOps/boxes/kubernetes-worker.json
+worker_box_version: &worker_box_version 20220311.0.0
+
+# spec
+spec:
+  setup:
+    host_path: setup
+    guest_path: /usr/local/bin/setup
+  vbox:
+    synced_folder:
+      - disabled: false
+        host_path: ~/workspace
+        guest_path: /share
+      - disabled: false
+        host_path: .
+        guest_path: /vagrant
+  ssh:
+    username: ubuntu
+    password: ubuntu
+  node_list:
+    # kubernetes
+    - name: worker1
+      group_name: /kubernetes
+      enable: true
+      hostname: worker1.mlops
+      box:
+        name: *worker_box_name
+        url: *worker_box_url
+        version: *worker_box_version
+      private_network: 192.168.56.32
+      resources:
+        cpus: 6
+        memory: 6144
+      vbguest_update: false
+      disk:
+        - name: worker1-docker
+          storagectl: SCSI
+          port: 2
+          size: 50
+          filename: ./disks/worker1-docker.vdi
+          device: /dev/sdc
+          mount: /var/lib/docker
+      provision:
+        - privileged: true
+          inline: "systemctl restart docker"
+        - privileged: true
+          inline: "update-kubelet-extra-args.sh 192.168.56.32"
+    - name: worker2
+      group_name: /kubernetes
+      enable: true
+      hostname: worker2.mlops
+      box:
+        name: *worker_box_name
+        url: *worker_box_url
+        version: *worker_box_version
+      private_network: 192.168.56.33
+      resources:
+        cpus: 6
+        memory: 6144
+      vbguest_update: false
+      disk:
+        - name: worker2-docker
+          storagectl: SCSI
+          port: 2
+          size: 50
+          filename: ./disks/worker2-docker.vdi
+          device: /dev/sdc
+          mount: /var/lib/docker
+      provision:
+        - privileged: true
+          inline: "systemctl restart docker"
+        - privileged: true
+          inline: "update-kubelet-extra-args.sh 192.168.56.33"
+    - name: master
+      group_name: /kubernetes
+      enable: true
+      hostname: master.mlops
+      box:
+        name: *master_box_name
+        url: *master_box_url
+        version: *master_box_version
+      private_network: 192.168.56.31
+      resources:
+        cpus: 8
+        memory: 8192
+      vbguest_update: false
+      provision:
+        - privileged: true
+          inline: "systemctl restart docker"
+        - privileged: true
+          inline: "update-kubelet-extra-args.sh 192.168.56.31"
+
+        # kubeadm init with calico: enable-kube-proxy
+        - privileged: true
+          inline: "kubernetes-init.sh 192.168.56.31 10.50.0.0/16 10.244.0.0/16 dev ubuntu enable-kube-proxy"
+        - privileged: true
+          inline: "apply-calico.sh /usr/local/bin/setup/config/skel"
+
+        # kubeadm init with cilium: disable-kube-proxy
+#        - privileged: true
+#          inline: "kubernetes-init.sh 192.168.56.31 10.50.0.0/16 10.244.0.0/16 dev ubuntu disable-kube-proxy"
+#        - privileged: true
+#          inline: "apply-cilium.sh 1.11.2 192.168.56.31 192.168.56.0/16"
+
+        # join worker
+        - privileged: true
+          inline: "kubernetes-join.sh worker1.mlops,worker2.mlops"
+        # metrics server
+        - privileged: true
+          inline: "apply-metrics-server.sh /usr/local/bin/setup/config/skel"
+        # LoadBalancer: metallb
+        - privileged: true
+          inline: "apply-metallb.sh v0.12 /usr/local/bin/setup/config/skel 192.168.56.31-192.168.56.33"
+        # ingress or istio
+        - privileged: true
+          inline: "apply-istio.sh 1.13.1"
+#        - privileged: true
+#          inline: "apply-ingress.sh v1.1.1 /usr/local/bin/setup/config/skel"
+
+        # argocd
+        - privileged: true
+          inline: "apply-argocd.sh /usr/local/bin/setup/config/skel"
+      disk:
+        - name: master-docker
+          storagectl: SCSI
+          port: 2
+          size: 50
+          filename: ./disks/master-docker.vdi
+          device: /dev/sdc
+          mount: /var/lib/docker
+#        - name: master-workspace
+#          storagectl: SCSI
+#          port: 3
+#          size: 100
+#          filename: ./disks/master-workspace.vdi
+#          device: /dev/sdd
+#          mount: /workspace

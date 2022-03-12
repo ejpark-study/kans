@@ -1,0 +1,23 @@
+---
+spec:
+  name: kubernetes-worker
+  box:
+    name: kubernetes/docker
+    url: file://C:\Temp\MLOps\boxes\kubernetes-docker.json
+  setup:
+    host_path: ../setup
+    guest_path: /usr/local/bin/setup
+  provider:
+    name: kubernetes-worker
+    cpus: 4
+    memory: 4096
+  hostname: worker
+  disk_size: 45GB
+  provision:
+    - privileged: true
+      path: "kubernetes/kubernetes-core.sh"
+      args: ["1.23.3"]
+    - privileged: true
+      path: "core/clear-cache.sh"
+    - privileged: true
+      path: "core/compact-disk.sh"

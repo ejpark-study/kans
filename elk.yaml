@@ -1,0 +1,165 @@
+---
+# box info
+docker_box_name: &docker_box_name kubernetes/docker
+docker_box_url: &docker_box_url file://C:/Temp/MLOps/boxes/kubernetes-docker.json
+docker_box_version: &docker_box_version 20220311.0.0
+
+# spec
+spec:
+  setup:
+    host_path: setup
+    guest_path: /usr/local/bin/setup
+  vbox:
+    synced_folder:
+      - disabled: false
+        host_path: ~/workspace
+        guest_path: /share
+      - disabled: false
+        host_path: .
+        guest_path: /vagrant
+  ssh:
+    username: ubuntu
+    password: ubuntu
+  node_list:
+    # devops: elk proxy
+    - name: elk-proxy
+      group_name: /elk
+      enable: true
+      hostname: elk.mlops
+      box:
+        name: *docker_box_name
+        url: *docker_box_url
+        version: *docker_box_version
+      private_network: 192.168.56.20
+      resources:
+        cpus: 2
+        memory: 2048
+      vbguest_update: false
+      provision:
+        - privileged: true
+          inline: "systemctl restart docker"
+        - privileged: true
+          inline: "start-elk-proxy.sh harbor.mlops/library/elk-proxy:7.17.0 /vagrant/docker"
+    # devops: elasticsearch1
+    - name: elasticsearch1
+      group_name: /elk
+      enable: true
+      hostname: elasticsearch1.mlops
+      box:
+        name: *docker_box_name
+        url: *docker_box_url
+        version: *docker_box_version
+      private_network: 192.168.56.22
+      resources:
+        cpus: 8
+        memory: 8192
+      vbguest_update: false
+      disk:
+        - name: elasticsearch1-docker
+          storagectl: SCSI
+          port: 2
+          size: 50
+          filename: ./disks/elasticsearch1-docker.vdi
+          device: /dev/sdc
+          mount: /var/lib/docker
+        - name: elasticsearch1-data
+          storagectl: SCSI
+          port: 3
+          size: 50
+          filename: ./disks/elasticsearch1-data.vdi
+          device: /dev/sdd
+          mount: /data
+      provision:
+        - privileged: true
+          inline: "systemctl restart docker"
+        - privileged: true
+          inline: "start-elasticsearch.sh elasticsearch1.mlops ChangeMe! /data/elasticsearch mlops harbor.mlops/library/elasticsearch:7.17.0 4g 192.168.56.22,192.168.56.23,192.168.56.24 /vagrant/docker"
+    # devops: elasticsearch2
+    - name: elasticsearch2
+      group_name: /elk
+      enable: true
+      hostname: elasticsearch2.mlops
+      box:
+        name: *docker_box_name
+        url: *docker_box_url
+        version: *docker_box_version
+      private_network: 192.168.56.23
+      resources:
+        cpus: 8
+        memory: 8192
+      vbguest_update: false
+      disk:
+        - name: elasticsearch2-docker
+          storagectl: SCSI
+          port: 2
+          size: 50
+          filename: ./disks/elasticsearch2-docker.vdi
+          device: /dev/sdc
+          mount: /var/lib/docker
+        - name: elasticsearch-data2
+          storagectl: SCSI
+          port: 3
+          size: 50
+          filename: ./disks/elasticsearch2-data.vdi
+          device: /dev/sdd
+          mount: /data
+      provision:
+        - privileged: true
+          inline: "systemctl restart docker"
+        - privileged: true
+          inline: "start-elasticsearch.sh elasticsearch2.mlops ChangeMe! /data/elasticsearch mlops harbor.mlops/library/elasticsearch:7.17.0 4g 192.168.56.22,192.168.56.23,192.168.56.24 /vagrant/docker"
+    # devops: elasticsearch3
+    - name: elasticsearch3
+      group_name: /elk
+      enable: true
+      hostname: elasticsearch3.mlops
+      box:
+        name: *docker_box_name
+        url: *docker_box_url
+        version: *docker_box_version
+      private_network: 192.168.56.24
+      resources:
+        cpus: 8
+        memory: 8192
+      vbguest_update: false
+      disk:
+        - name: elasticsearch3-docker
+          storagectl: SCSI
+          port: 2
+          size: 50
+          filename: ./disks/elasticsearch3-docker.vdi
+          device: /dev/sdc
+          mount: /var/lib/docker
+        - name: elasticsearch3-data
+          storagectl: SCSI
+          port: 3
+          size: 50
+          filename: ./disks/elasticsearch3-data.vdi
+          device: /dev/sdd
+          mount: /data
+      provision:
+        - privileged: true
+          inline: "systemctl restart docker"
+        - privileged: true
+          inline: "start-elasticsearch.sh elasticsearch3.mlops ChangeMe! /data/elasticsearch mlops harbor.mlops/library/elasticsearch:7.17.0 4g 192.168.56.22,192.168.56.23,192.168.56.24 /vagrant/docker"
+    # devops: kibana
+    - name: kibana
+      group_name: /elk
+      enable: true
+      hostname: kibana.mlops
+      box:
+        name: *docker_box_name
+        url: *docker_box_url
+        version: *docker_box_version
+      private_network: 192.168.56.21
+      resources:
+        cpus: 2
+        memory: 2048
+      vbguest_update: false
+      provision:
+        - privileged: true
+          inline: "systemctl restart docker"
+        - privileged: true
+          inline: "start-kibana.sh kibana kibana_system ChangeMe! https://elk.mlops:9200 harbor.mlops/library/kibana:7.17.0 /vagrant/docker"
+        - privileged: true
+          inline: "set-kibana-passwd.sh elastic:ChangeMe! ChangeMe! https://elasticsearch1.mlops:9200"

@@ -1,0 +1,7 @@
+# PATH
+if [[ -d /usr/local/bin/setup ]]; then
+  for d in $(find /usr/local/bin/setup -type d 2>/dev/null); do PATH="$d:$PATH"; done
+fi
+
+# PATH remove duplication
+export PATH=.:$(echo "$PATH" | awk -v RS=':' -v ORS=":" '!a[$1]++{if (NR > 1) printf ORS; printf $a[$1]}')
