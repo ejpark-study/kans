@@ -29,7 +29,7 @@ spec:
     - name: worker1
       group_name: /kans
       enable: true
-      hostname: worker1.mlops
+      hostname: worker1.kans
       box:
         name: *worker_box_name
         url: *worker_box_url
@@ -55,7 +55,7 @@ spec:
     - name: worker2
       group_name: /kans
       enable: true
-      hostname: worker2.mlops
+      hostname: worker2.kans
       box:
         name: *worker_box_name
         url: *worker_box_url
@@ -81,7 +81,7 @@ spec:
     - name: master
       group_name: /kans
       enable: true
-      hostname: master.mlops
+      hostname: master.kans
       box:
         name: *master_box_name
         url: *master_box_url
@@ -103,7 +103,7 @@ spec:
           inline: "apply-cilium.sh 1.11.2 192.168.56.31 192.168.56.0/16"
         # join worker
         - privileged: true
-          inline: "kubernetes-join.sh worker1.mlops,worker2.mlops"
+          inline: "kubernetes-join.sh worker1.kans,worker2.kans"
         # metrics server
         - privileged: true
           inline: "apply-metrics-server.sh /usr/local/bin/setup/config/skel"

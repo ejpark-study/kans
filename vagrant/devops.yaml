@@ -30,7 +30,7 @@ spec:
     - name: gitlab
       group_name: /devops
       enable: true
-      hostname: gitlab.mlops
+      hostname: gitlab.kans
       box:
         name: *docker_box_name
         url: *docker_box_url
@@ -62,16 +62,16 @@ spec:
         - privileged: true
           inline: "systemctl restart docker"
         - privileged: true
-          inline: "start-gitlab.sh gitlab.mlops /data/gitlab ChangeMe! gitlab/gitlab-ce:14.7.3-ce.0 /vagrant/docker /usr/local/bin/setup/config/certs GmTMZbtrsYY8Tmb-6QJk"
+          inline: "start-gitlab.sh gitlab.kans /data/gitlab ChangeMe! gitlab/gitlab-ce:14.7.3-ce.0 /vagrant/docker /usr/local/bin/setup/config/certs GmTMZbtrsYY8Tmb-6QJk"
         - privileged: true
           inline: "start-gitlab-runner.sh gitlab/gitlab-runner:latest /data/gitlab-runner /data/gitlab/config/ssl /vagrant/docker"
         - privileged: true
-          inline: "gitlab-runner-register.sh gitlab.mlops GmTMZbtrsYY8Tmb-6QJk"
+          inline: "gitlab-runner-register.sh gitlab.kans GmTMZbtrsYY8Tmb-6QJk"
     # devops: harbor
     - name: harbor
       group_name: /devops
       enable: true
-      hostname: harbor.mlops
+      hostname: harbor.kans
       box:
         name: *docker_box_name
         url: *docker_box_url
@@ -100,12 +100,12 @@ spec:
         - privileged: true
           inline: "systemctl restart docker"
         - privileged: true
-          inline: "start-harbor.sh harbor.mlops /data/harbor/certs /usr/local/bin/setup/harbor /usr/local/bin/setup/config/skel"
+          inline: "start-harbor.sh harbor.kans /data/harbor/certs /usr/local/bin/setup/harbor /usr/local/bin/setup/config/skel"
     # devops: gocd
     - name: gocd
       group_name: /devops
       enable: true
-      hostname: gocd.mlops
+      hostname: gocd.kans
       box:
         name: *docker_box_name
         url: *docker_box_url
@@ -134,12 +134,12 @@ spec:
         - privileged: true
           inline: "systemctl restart docker"
         - privileged: true
-          inline: "start-gocd.sh gocd.mlops /data/gocd gocd/gocd-server:v21.4.0 harbor.mlops/library/gocd-agent:v21.4.0 /usr/local/bin/setup/config/certs"
+          inline: "start-gocd.sh gocd.kans /data/gocd gocd/gocd-server:v21.4.0 harbor.kans/library/gocd-agent:v21.4.0 /usr/local/bin/setup/config/certs"
     # devops: minio
     - name: minio
       group_name: /devops
       enable: false
-      hostname: minio.mlops
+      hostname: minio.kans
       box:
         name: *docker_box_name
         url: *docker_box_url
@@ -173,7 +173,7 @@ spec:
     - name: postgres
       group_name: /devops
       enable: false
-      hostname: postgres.mlops
+      hostname: postgres.kans
       box:
         name: *docker_box_name
         url: *docker_box_url
