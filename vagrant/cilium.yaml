@@ -1,11 +1,11 @@
 ---
 # box info
-master_box_name: &master_box_name kubernetes/master
-master_box_url: &master_box_url file://C:/Temp/MLOps/boxes/kubernetes-master.json
+master_box_name: &master_box_name kans/master
+master_box_url: &master_box_url file://C:/KANS/vagrant/boxes/master.json
 master_box_version: &master_box_version 20220311.0.0
 
-worker_box_name: &worker_box_name kubernetes/worker
-worker_box_url: &worker_box_url file://C:/Temp/MLOps/boxes/kubernetes-worker.json
+worker_box_name: &worker_box_name kans/worker
+worker_box_url: &worker_box_url file://C:/KANS/vagrant/boxes/worker.json
 worker_box_version: &worker_box_version 20220311.0.0
 
 # spec
@@ -27,7 +27,7 @@ spec:
   node_list:
     # kubernetes
     - name: worker1
-      group_name: /kubernetes
+      group_name: /kans
       enable: true
       hostname: worker1.mlops
       box:
@@ -53,7 +53,7 @@ spec:
         - privileged: true
           inline: "update-kubelet-extra-args.sh 192.168.56.32"
     - name: worker2
-      group_name: /kubernetes
+      group_name: /kans
       enable: true
       hostname: worker2.mlops
       box:
@@ -79,7 +79,7 @@ spec:
         - privileged: true
           inline: "update-kubelet-extra-args.sh 192.168.56.33"
     - name: master
-      group_name: /kubernetes
+      group_name: /kans
       enable: true
       hostname: master.mlops
       box:
@@ -96,19 +96,11 @@ spec:
           inline: "systemctl restart docker"
         - privileged: true
           inline: "update-kubelet-extra-args.sh 192.168.56.31"
-
-        # kubeadm init with calico: enable-kube-proxy
-        - privileged: true
-          inline: "kubernetes-init.sh 192.168.56.31 10.50.0.0/16 10.244.0.0/16 dev ubuntu enable-kube-proxy"
-        - privileged: true
-          inline: "apply-calico.sh /usr/local/bin/setup/config/skel"
-
         # kubeadm init with cilium: disable-kube-proxy
-#        - privileged: true
-#          inline: "kubernetes-init.sh 192.168.56.31 10.50.0.0/16 10.244.0.0/16 dev ubuntu disable-kube-proxy"
-#        - privileged: true
-#          inline: "apply-cilium.sh 1.11.2 192.168.56.31 192.168.56.0/16"
-
+        - privileged: true
+          inline: "kubernetes-init.sh 192.168.56.31 10.50.0.0/16 10.244.0.0/16 dev ubuntu disable-kube-proxy"
+        - privileged: true
+          inline: "apply-cilium.sh 1.11.2 192.168.56.31 192.168.56.0/16"
         # join worker
         - privileged: true
           inline: "kubernetes-join.sh worker1.mlops,worker2.mlops"
@@ -118,12 +110,6 @@ spec:
         # LoadBalancer: metallb
         - privileged: true
           inline: "apply-metallb.sh v0.12 /usr/local/bin/setup/config/skel 192.168.56.31-192.168.56.33"
-        # ingress or istio
-        - privileged: true
-          inline: "apply-istio.sh 1.13.1"
-#        - privileged: true
-#          inline: "apply-ingress.sh v1.1.1 /usr/local/bin/setup/config/skel"
-
         # argocd
         - privileged: true
           inline: "apply-argocd.sh /usr/local/bin/setup/config/skel"
@@ -135,10 +121,3 @@ spec:
           filename: ./disks/master-docker.vdi
           device: /dev/sdc
           mount: /var/lib/docker
-#        - name: master-workspace
-#          storagectl: SCSI
-#          port: 3
-#          size: 100
-#          filename: ./disks/master-workspace.vdi
-#          device: /dev/sdd
-#          mount: /workspace

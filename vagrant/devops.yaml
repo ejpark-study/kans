@@ -1,7 +1,7 @@
 ---
 # box info
-docker_box_name: &docker_box_name kubernetes/docker
-docker_box_url: &docker_box_url file://C:/Temp/MLOps/boxes/kubernetes-docker.json
+docker_box_name: &docker_box_name kans/docker
+docker_box_url: &docker_box_url file://C:/KANS/vagrant/boxes/docker.json
 docker_box_version: &docker_box_version 20220311.0.0
 
 # external ports

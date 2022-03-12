@@ -1,5 +1,5 @@
 {
-  "name": "kubernetes/master",
+  "name": "kans/master",
   "description": "Kubernetes Master",
   "versions": [
     {
@@ -7,7 +7,7 @@
       "providers": [
         {
           "name": "virtualbox",
-          "url": "file://C:/Temp/MLOps/boxes/kubernetes-master.box"
+          "url": "file://C:/KANS/vagrant/boxes/master.box"
         }
       ]
     }

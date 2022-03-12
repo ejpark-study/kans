@@ -1,13 +1,13 @@
 {
-  "name": "kubernetes/worker",
-  "description": "Kubernetes Worker",
+  "name": "kans/docker",
+  "description": "Kubernetes Docker",
   "versions": [
     {
       "version": "20220311.0.0",
       "providers": [
         {
           "name": "virtualbox",
-          "url": "file://C:/Temp/MLOps/boxes/kubernetes-worker.box"
+          "url": "file://C:/KANS/vagrant/boxes/docker.box"
         }
       ]
     }

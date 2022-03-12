@@ -1,14 +1,14 @@
 ---
 spec:
-  name: kubernetes-worker
+  name: kans-worker
   box:
-    name: kubernetes/docker
-    url: file://C:\Temp\MLOps\boxes\kubernetes-docker.json
+    name: kans/docker
+    url: file://C:\KANS/vagrant\boxes\docker.json
   setup:
     host_path: ../setup
     guest_path: /usr/local/bin/setup
   provider:
-    name: kubernetes-worker
+    name: kans-worker
     cpus: 4
     memory: 4096
   hostname: worker

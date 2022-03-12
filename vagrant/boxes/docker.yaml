@@ -1,6 +1,6 @@
 ---
 spec:
-  name: kubernetes-docker
+  name: kans-docker
   box:
     name: ubuntu/focal64
     version: 20220308.0.0
@@ -9,7 +9,7 @@ spec:
     host_path: ../setup
     guest_path: /usr/local/bin/setup
   provider:
-    name: kubernetes-docker
+    name: kans-docker
     cpus: 4
     memory: 4096
   hostname: docker

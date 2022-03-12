@@ -4,7 +4,7 @@
 require 'yaml'
 
 # open config yaml
-filename = "kubernetes-docker.yaml"
+filename = "docker.yaml"
 filename = ENV["CONFIG"] if ENV.has_key?("CONFIG")
 
 puts "Config Filename: #{filename}"
